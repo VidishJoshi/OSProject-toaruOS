@@ -126,11 +126,11 @@ qemu-system-x86_64 -boot d -cdrom image.iso
 
 Upon successful implementation, you will get these screen.
 
-![image](images/1.png)
+![image](https://github.com/VidishJoshi/OSProject-toaruOS/tree/master/images/1.png)
 
 You can select `Normal Boot` and get this screen.
 
-![image](images/2.png)
+![image](https://github.com/VidishJoshi/OSProject-toaruOS/tree/master/images/2.png)
 
 You will be taken across basic tutorials for how to work around the OS. Go through them and press `NEXT` to finish them.
 
@@ -138,7 +138,7 @@ You will be taken across basic tutorials for how to work around the OS. Go throu
 
 The desktop contains shortcuts to `terminal`,  `File Browser`, and `Readme` file.
 
-![image](images/3.png)
+![image](https://github.com/VidishJoshi/OSProject-toaruOS/tree/master/images/3.png)
 
 
 
@@ -248,12 +248,8 @@ STRUCTURE:
 
 The structure of Root Directory contains the File Names, with their Time-Stamps and their starting cluster address.
 
-<<<<<<< HEAD
-![Structure inside directory](images/image1.png)
-=======
-![Structure inside directory](https://github.com/VidishJoshi/OSProject-toaruOS/blob/main/image1.PNG)
->>>>>>> 5b99cb416790be54eb0ada41951eb9c34c277a75
 
+![Structure inside directory](https://github.com/VidishJoshi/OSProject-toaruOS/tree/master/images/image1.png)
 
 
 Here, the " **.** " file inside Folder 1 has cluster address same as that of Folder 1. This is for the system to know where these files are located.
