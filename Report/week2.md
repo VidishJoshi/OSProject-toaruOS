@@ -103,7 +103,11 @@ The code should work along with these attributes and fields since these fields w
 
 Read and understand the Microsoft documentation for FAT32 system.
 
-Along with it, start coding the blocks that are understood. Refer to the documentation whenever necessary. [This]{https://www.pjrc.com/tech/8051/ide/fat32.html} might also be useful along with the documentation.
+Along with it, start coding the blocks that are understood. Refer to the documentation whenever necessary. 
+
+The following link is also useful along with the documentation as it explains concepts very clearly:
+
+* [https://www.pjrc.com/tech/8051/ide/fat32.html](https://www.pjrc.com/tech/8051/ide/fat32.html)
 
 This YouTube lecture series is good. Great explanation + implementation is done in this series. Refer this in the coming week.
 
