@@ -29,7 +29,7 @@ fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 
 cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 
-sectors_per_cluster = BPB_SecPerClus;
+sectors_per_cluster = BPB_SecPerClus; 
 
 root_dir_first_cluster = BPB_RootClus;
 
