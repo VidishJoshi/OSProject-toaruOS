@@ -1,3 +1,30 @@
+## School of Engineering and Applied Science, Ahmedabad University
+
+**Operating System Lab - CSE 341**
+
+**Faculty**: *Prof. Mansukh Savaliya*
+
+**Project Progress Report**: *Week 2*
+
+**Group Number**: *3*
+
+**Group Members**:
+
+|     Name      | Enrolment Number |
+| :-----------: | :--------------: |
+| Yashil Depani |    AU1841005     |
+| Vidish Joshi  |    AU1841019     |
+|  Manav Patel  |    AU1841037     |
+
+
+
+## OSProject - toaruOS
+
+An operating systems project on understanding and solving issues for the open source OS - [toaruOS](https://github.com/klange/toaruos).
+
+This repository and read me contains the work done, issues faced and implementation done by us on the original OS. These steps will be
+similar in some cases to that of the original OS and different in some others.
+
 ##  Index
 
 1. [Understanding FAT32 File Systems](#Understanding-FAT32-File-Systems)
@@ -54,8 +81,6 @@ Here are the possible entries in a FAT cell:
 Let us understand the following File Allocation Table and the entries inside them:
 
 ![image](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img2/2.PNG)
-
-![image](/img2/2.PNG)
 
 
 
