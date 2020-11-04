@@ -24,9 +24,11 @@ An operating systems project on understanding and solving issues for the open so
 
 ##  Index
 
-1. [Reading FAT Table](#Reading_FAT_Table)
-2. [Creating/Getting IMG File](#Creating_IMG_FIle)
-3. [Implementing IMG File](#Implementing_IMG_File)
+1. [Reading FAT Table](#Reading-FAT-Table)
+2. [Creating/Getting IMG File](#Creating-IMG-FIle)
+3. [The CODE](#The-CODE)
+4. [Planning for next week](#Planning-for-next-week)
+5. [Contribution](#Contribution)
 
 
 
