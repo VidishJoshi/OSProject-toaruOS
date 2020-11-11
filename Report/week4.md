@@ -35,11 +35,11 @@ During this week, our main focus was to go head with the coding part and develop
 2. Each FAT has 1 32-bit word for every cluster. Each entry is the logical block of the next
    block in the file.
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/2.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/2.PNG)
 
 4. Clusters start at address (BPB_NumFATs * BPB_FATSz32 * BPB_BytsPerSec) + (BPB_RsvdSecCnt * BPB_BytsPerSec)
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/3.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/3.PNG)
 
 We use these relationships to create functions which allow us to open the `.img` file and store all the fields and necessary offsets with their appropriate size in variables.
 
@@ -49,19 +49,19 @@ We use these relationships to create functions which allow us to open the `.img`
 
 This the structure of a directory. We store all the information of a *dir* in a variable of this structure to access the its properties such as FileSize, DIrName, FirstCluster properties, etc. as shown in the image below,
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/code1.jpeg)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code1.jpeg)
 
 When we retrieve the location of directories from the Allocation Table, the location address follows *Logical Block Addressing* method which is useful for the machine to locate directories. We convert it into readable form of memory offset.
 
 This conversion can be understood and achieved from the relationships shown in the first section and the *documentation*.
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/code2.jpeg)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code2.jpeg)
 
 
 
 This is the `openImage` function that allows us to open the `.img` file containing the FAT configured drive. As described in the previous weekly reports regarding the offsets in the Allocation table, their sizes and their importance, we store these necessary values after opening the file in appropriate data structures using *file pointer* and related functions such `fseek` and `fread`.
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/code3.jpeg)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code3.jpeg)
 
 
 
@@ -69,7 +69,7 @@ This is the `openImage` function that allows us to open the `.img` file containi
 
 This function is used to implement the `info` command on an already opened `.img` file. This function prints all the important fields as mentioned in the documentation that we stored in variable after opening the image file.
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/img4/code5.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code5.PNG)
 
 
 
