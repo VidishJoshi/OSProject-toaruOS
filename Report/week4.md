@@ -3,7 +3,7 @@
 
 **Faculty**: *Prof. Mansukh Savaliya*
 
-**Project Progress Report**: *Week 2*
+**Project Progress Report**: *Week 4*
 
 **Group Number**: *3*
 
@@ -20,6 +20,13 @@
 ## OSProject - toaruOS
 
 An operating systems project on understanding and solving issues for the open source OS - [toaruOS](https://github.com/klange/toaruos).
+
+1. FAT #1 starts at address BPB_RsvdSecCnt * BPB_BytsPerSec
+2. Each FAT has 1 32-bit word for every cluster. Each entry is the logical block of the next
+block in the file.
+3. Clusters start at address (BPB_NumFATs * BPB_FATSz32 * BPB_BytsPerSec) +
+(BPB_RsvdSecCnt * BPB_BytsPerSec)
+
 
 ![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/1.PNG)
 ![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/2.PNG)
