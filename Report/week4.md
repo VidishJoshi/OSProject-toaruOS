@@ -21,7 +21,13 @@
 
 An operating systems project on understanding and solving issues for the open source OS - [toaruOS](https://github.com/klange/toaruos).
 
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img3/1.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/1.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/2.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/3.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code1.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code2.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code3.PNG)
+
 
 ## First character of the filename:
 
