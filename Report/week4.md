@@ -24,9 +24,9 @@ An operating systems project on understanding and solving issues for the open so
 ![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/1.PNG)
 ![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/2.PNG)
 ![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/3.PNG)
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code1.PNG)
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code2.PNG)
-![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code3.PNG)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code1.jpeg)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code2.jpeg)
+![FatFileSys](https://github.com/VidishJoshi/OSProject-toaruOS/blob/master/Report/img4/code3.jpeg)
 
 
 ## First character of the filename:
