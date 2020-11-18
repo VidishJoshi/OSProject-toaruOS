@@ -45,4 +45,8 @@ This function does the work of " cd .. " command. For every directories in img f
 
 ## Reading File
 
-Thsi function does the work of reading the file. For this we pass the filename as the argument. We call the getCluster function to know the cluster of that file. With the help of this cluster we get the offset. We move the pointer to that file through that offset with the help of that fseek function. Now we read the data of the file and store it in a character array and finally print this array.
+This function does the work of reading the file. For this we pass the filename as the argument. We call the getCluster function to know the cluster of that file. With the help of this cluster we get the offset. We move the pointer to that file through that offset with the help of that fseek function. Now we read the data of the file and store it in a character array and finally print this array.
+
+## Print Directory
+
+This function works as "ls" command, just traversing through all the directories and printing them. For this, we need offset and then we are pointing the file pointer to that offset location in the image file and along with this, directory attributies are also required for the validation purpose (It can be obtained from the defined property of directory).FInally, after all validations and other logic print the file/directory name.
