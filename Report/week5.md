@@ -26,8 +26,7 @@ An operating systems project on understanding and solving issues for the open so
 1. [Printing Directories](#Printing-Directoryies)
 2. [Formating/(proper naming convention) Directories](#Formating-Directories)
 3. [Change the directory](#change-the-directory)
-4. [Planning for next week](#Planning-for-next-week)
-5. [Contribution](#Contribution)
+4. [Reading File](#Reading-File)
 
 ## Printing Directories
 
@@ -43,3 +42,7 @@ Hence through this function, it converts all characters to uppercase.
 ## Change the directory
 
 This function does the work of " cd .. " command. For every directories in img file, there are two pointers like ".." and ".". " .." is associated with parent directory of that current directory. So whenever user writes "cd .." , the function after validating the input, gets the offset of parent directory. Changes the pointer to that diectory through fseek and reads that pointer so now we are in that parent directory.
+
+## Reading File
+
+Thsi function does the work of reading the file. For this we pass the filename as the argument. We call the getCluster function to know the cluster of that file. With the help of this cluster we get the offset. We move the pointer to that file through that offset with the help of that fseek function. Now we read the data of the file and store it in a character array and finally print this array.
