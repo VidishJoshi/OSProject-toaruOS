@@ -27,6 +27,7 @@ An operating systems project on understanding and solving issues for the open so
 2. [Formating/(proper naming convention) Directories](#Formating-Directories)
 3. [Change the directory](#change-the-directory)
 4. [Reading File](#Reading-File)
+5. [Directory Info](#Directory-Info)
 
 ## Printing Directories
 
@@ -46,3 +47,7 @@ This function does the work of " cd .. " command. For every directories in img f
 ## Reading File
 
 This function does the work of reading the file. For this we pass the filename as the argument. We call the getCluster function to know the cluster of that file. With the help of this cluster we get the offset. We move the pointer to that file through that offset with the help of that fseek function. Now we read the data of the file and store it in a character array and finally print this array.
+
+## Directory Info
+
+This function shows the information like size, attributes, starting cluster, cluster high. For this, the cluster is obtained from the given directory name and then getting the size of cluster which is actual size of directory and thn obtain information from the given statistics like cluster low, attribute, cluster high and everything that is stored as the property of the directory.
