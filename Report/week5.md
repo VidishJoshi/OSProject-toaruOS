@@ -25,7 +25,7 @@ An operating systems project on understanding and solving issues for the open so
 
 1. [Printing Directories](#Printing-Directoryies)
 2. [Formating/(proper naming convention) Directories](#Formating-Directories)
-3. [The CODE](#The-CODE)
+3. [Change the directory](#change-the-directory)
 4. [Planning for next week](#Planning-for-next-week)
 5. [Contribution](#Contribution)
 
@@ -39,3 +39,7 @@ This function formats the proper naming convention for the file directories in o
 
 This is based on fact that name of a file/directory actually consists of 2 names: The old (short) 8.3 convention and the new (long) 255-character name. This function updates both these names whenever you give a name to the file. The short name is created automatically, based on the first characters of the long name (e.g. SyncToy_4264be.dat becomes SYNCTOY~1.DAT). If the name fits into the old naming convention, the long name is discarded.
 Hence through this function, it converts all characters to uppercase.
+
+## Change the directory
+
+This function does the work of " cd .. " command. For every directories in img file, there are two pointers like ".." and ".". " .." is associated with parent directory of that current directory. So whenever user writes "cd .." , the function after validating the input, gets the offset of parent directory. Changes the pointer to that diectory through fseek and reads that pointer so now we are in that parent directory.
