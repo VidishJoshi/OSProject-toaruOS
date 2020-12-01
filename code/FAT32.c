@@ -51,6 +51,23 @@ struct DirectoryEntry dir[16];       //Creation of the directory
 
 FILE *fp;
 
+void getInput();//Receives input from the user that is parsed into tokens.
+void execute();//Main function of the program, acts as the shell receiving commands
+void openImage(char file[]);//Opens a file system image to be used.
+void closeImage();//Closes the file system before exiting the program.
+void printDirectory();//Prints the current working directory (ls)
+void changeDirectory(int32_t sector);//Changes directory by user specification (cd)
+void getDirectoryInfo();//Prints directory info stored in struct above (line 67)
+int32_t getCluster(char *dirname);//Receives the cluster of information to be used in execute (line 82)
+int32_t getSizeOfCluster(int32_t cluster);//Receives of the size of the cluster as an attribute
+void formatDirectory(char *dirname);//Formats the directory to remove whitespace and concatenate a period between the name and extension.
+void get();//Pulls file from the file system image into your cwd (current working directory)
+void decToHex(int dec);//Converts decimal numbers to hex to be printed in info (see execute, line 82)
+void stat(char *dirname);//Prints the attributes of the directory 
+void volume();//Prints the name of the volume in the fat32 file system image
+void readFile(char *dirname, int position, int numOfBytes);//Reads the bytes specified by the user in the file of their choice
+
+
 int main()
 {
     while (1)
