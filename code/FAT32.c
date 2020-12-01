@@ -11,14 +11,14 @@
                            // In this case  white space                        \
                            // will separate the tokens on our command line
 
-#define MAX_COMMAND_SIZE 255 // The maximum command-line size
+#define MAX_COMSIZE 255         // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
+#define MAX_ARG 10              // Mav shell only supports five arguments
 
-// token and cmd_str used for tokenizing user input
+// buffer and cmd_buffer used for tokenizing user input
 
-char *token[MAX_NUM_ARGUMENTS];   // Parsed input string separated by white space
-char cmd_str[MAX_COMMAND_SIZE];   // Entire string inputted by the user. It will be parsed into multiple tokens (47)
+char *buffer[MAX_ARG];          // Parsed input string separated by white space
+char cmd_buffer[MAX_COMSIZE];   // Entire string inputted by the user. It will be parsed into multiple tokens (47)
 
 char BS_OEMName[8];
 int16_t BPB_BytesPerSec;   // The amount of bytes in each sector of the fat32 file image
@@ -33,8 +33,8 @@ int32_t RootDirSectors = 0;        // Amount of root directory sectors
 int32_t FirstDataSector = 0;       // Where the first data sector exists in the fat32 file image.
 int32_t FirstSectorofCluster = 0;  // First sector of the data cluster exists at point 0 in the fat32 file image.
 
-int32_t currentDirectory;          // Current working directory
-char formattedDirectory[12];       // String to contain the fully formatted string
+int32_t current_dir;               // Current working directory
+char formatted_dir[12];            // String to contain the fully formatted string
 char BPB_Volume[11];               // String to store the volume of the fat32 file image
 
 struct __attribute__((__packed__)) DirectoryEntry
@@ -51,29 +51,28 @@ struct DirectoryEntry dir[16];       //Creation of the directory
 
 FILE *fp;
 
-void getInput();//Receives input from the user that is parsed into tokens.
-void execute();//Main function of the program, acts as the shell receiving commands
-void openImage(char file[]);//Opens a file system image to be used.
-void closeImage();//Closes the file system before exiting the program.
-void printDirectory();//Prints the current working directory (ls)
-void changeDirectory(int32_t sector);//Changes directory by user specification (cd)
-void getDirectoryInfo();//Prints directory info stored in struct above (line 67)
-int32_t getCluster(char *dirname);//Receives the cluster of information to be used in execute (line 82)
-int32_t getSizeOfCluster(int32_t cluster);//Receives of the size of the cluster as an attribute
-void formatDirectory(char *dirname);//Formats the directory to remove whitespace and concatenate a period between the name and extension.
-void get();//Pulls file from the file system image into your cwd (current working directory)
-void decToHex(int dec);//Converts decimal numbers to hex to be printed in info (see execute, line 82)
-void stat(char *dirname);//Prints the attributes of the directory 
-void volume();//Prints the name of the volume in the fat32 file system image
-void readFile(char *dirname, int position, int numOfBytes);//Reads the bytes specified by the user in the file of their choice
-
+void INIT_INPUT();                                            // Receives input from the user that is parsed into tokens.
+void INIT_EXECUTE();                                          // Main function of the program, acts as the shell receiving commands
+void openImgFile(char file[]);                                // Opens a file system image to be used.
+void closeImgFile();                                          // Closes the file system before exiting the program.
+void ls();                                                    // Prints the current working directory (ls)
+void cd(int32_t sector);                                      // Changes directory by user specification (cd)
+void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
+int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
+int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
+void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
+void get();                                                   // Pulls file from the file system image into your cwd (current working directory)
+void decToHex(int dec);                                       // Converts decimal numbers to hex to be printed in info (see execute, line 82)
+void stat(char *dir_name);                                    // Prints the attributes of the directory 
+void vol();                                                   // Prints the name of the volume in the fat32 file system image
+void read_file(char *dir_name, int pos, int num_of_bytes);     // Reads the bytes specified by the user in the file of their choice
 
 int main()
 {
     while (1)
     {
-        getInput();
-        execute();
+        INIT_INPUT();
+        INIT_EXECUTE();
     }
     return 0;
 }
@@ -90,88 +89,88 @@ int LBAToOffset(int32_t sector)
     return ((sector - 2) * BPB_BytesPerSec) + (BPB_BytesPerSec * BPB_RsvdSecCnt) + (BPB_NumFATs * BPB_FATSz32 * BPB_BytesPerSec);
 }
 
-void getInput()
+void INIT_INPUT()
 {
     printf("CMD> ");
 
-    memset(cmd_str, '\0', MAX_COMMAND_SIZE);
+    memset(cmd_buffer, '\0', MAX_COMSIZE);
 
-    while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin));
+    while (!fgets(cmd_buffer, MAX_COMSIZE, stdin));
 
     int token_count = 0;
 
     char *arg_ptr;
 
-    char *working_str = strdup(cmd_str);
+    char *working_str = strdup(cmd_buffer);
 
     char *working_root = working_str;
 
-    memset(&token, '\0', MAX_NUM_ARGUMENTS);
+    memset(&buffer, '\0', MAX_ARG);
 
-    memset(&token, '\0', sizeof(MAX_NUM_ARGUMENTS));
-    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_NUM_ARGUMENTS))
+    memset(&buffer, '\0', sizeof(MAX_ARG));
+    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_ARG))
     {
-        token[token_count] = strndup(arg_ptr, MAX_COMMAND_SIZE); // v[i] = string
-        if (strlen(token[token_count]) == 0)  // size = 0 is not valid
+        buffer[token_count] = strndup(arg_ptr, MAX_COMSIZE); // v[i] = string
+        if (strlen(buffer[token_count]) == 0)                // size = 0 is not valid
         {
-            token[token_count] = NULL;
+            buffer[token_count] = NULL;
         }
         token_count++;
     }
     free(working_root);
 }
 
-void getInput()    // patigyu
+void INIT_INPUT()    // patigyu
 {
     printf("CMD> ");
 
-    memset(cmd_str, '\0', MAX_COMMAND_SIZE);
+    memset(cmd_buffer, '\0', MAX_COMSIZE);
 
-    while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin))
+    while (!fgets(cmd_buffer, MAX_COMSIZE, stdin))
         ;
 
     int token_count = 0;
 
     char *arg_ptr;
 
-    char *working_str = strdup(cmd_str);
+    char *working_str = strdup(cmd_buffer);
 
     char *working_root = working_str;
 
-    memset(&token, '\0', MAX_NUM_ARGUMENTS);
+    memset(&buffer, '\0', MAX_ARG);
 
-    memset(&token, '\0', sizeof(MAX_NUM_ARGUMENTS));
-    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_NUM_ARGUMENTS))
+    memset(&buffer, '\0', sizeof(MAX_ARG));
+    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_ARG))
     {
-        token[token_count] = strndup(arg_ptr, MAX_COMMAND_SIZE); // v[i] = string
-        if (strlen(token[token_count]) == 0)  // size = 0 is not valid
+        buffer[token_count] = strndup(arg_ptr, MAX_COMSIZE); // v[i] = string
+        if (strlen(buffer[token_count]) == 0)                // size = 0 is not valid
         {
-            token[token_count] = NULL;
+            buffer[token_count] = NULL;
         }
         token_count++;
     }
     free(working_root);
 }
 
-void execute()
+void INIT_EXECUTE()
 {
     
-    if (token[0] == NULL)   // If the user just hits enter, do nothing
+    if (buffer[0] == NULL)   // If the user just hits enter, do nothing
     {
         return;
     }
-    if (strcmp(token[0], "open") == 0)  // if command entered is "open"
+    if (strcmp(buffer[0], "open") == 0)  // if command entered is "open"
     {
         if (fp != NULL)    // if already occupied , some image file is already open
         {
             printf("Error: File system image already open.\n");
             return;
         }
-        if (token[1] != NULL && fp == NULL)  // ok condition
+        if (buffer[1] != NULL && fp == NULL)  // ok condition
         {
-            openImage(token[1]);  // function to open image file
+            openImgFile(buffer[1]);  // function to open image file
         }
-        else if (token[1] == NULL) // file name not given
+        else if (buffer[1] == NULL) // file name not given
         {
             printf("ERR: Must give argument of file to open\n");
         }
@@ -183,7 +182,7 @@ void execute()
         return;
     }
     // different commands to be implemented
-    else if (strcmp(token[0], "info") == 0)
+    else if (strcmp(buffer[0], "info") == 0)
     {
         printf("BPB_BytesPerSec: %d - ", BPB_BytesPerSec);
         decToHex(BPB_BytesPerSec);
@@ -201,47 +200,47 @@ void execute()
         decToHex(BPB_FATSz32);
         printf("\n");
     }
-    else if (strcmp(token[0], "ls") == 0)
+    else if (strcmp(buffer[0], "ls") == 0)
     {
-        printDirectory();
+        ls();
     }
-    else if (strcmp(token[0], "cd") == 0)
+    else if (strcmp(buffer[0], "cd") == 0)
     {
-        if (token[1] == NULL)
+        if (buffer[1] == NULL)
         {
             printf("ERR: Please provide which directory you would like to open\n");
             return;
         }
-        changeDirectory(getCluster(token[1]));
+        cd(getCluster(buffer[1]));
     }
-    else if (strcmp(token[0], "get") == 0)
+    else if (strcmp(buffer[0], "get") == 0)
     {
-        get(token[1]);
+        get(buffer[1]);
     }
-    else if (strcmp(token[0], "stat") == 0)
+    else if (strcmp(buffer[0], "stat") == 0)
     {
-        stat(token[1]);
+        stat(buffer[1]);
     }
-    else if (strcmp(token[0], "volume") == 0)
+    else if (strcmp(buffer[0], "volume") == 0)
     {
-        volume();
+        vol();
     }
-    else if (strcmp(token[0], "read") == 0)
+    else if (strcmp(buffer[0], "read") == 0)
     {
-        if (token[1] == NULL || token[2] == NULL || token[3] == NULL)
+        if (buffer[1] == NULL || buffer[2] == NULL || buffer[3] == NULL)
         {
             printf("Please input valid arguments.\n");
             return;
         }
-        readFile(token[1], atoi(token[2]), atoi(token[3]));
+        read_file(buffer[1], atoi(buffer[2]), atoi(buffer[3]));
     }
-    else if (strcmp(token[0], "close") == 0)
+    else if (strcmp(buffer[0], "close") == 0)
     {
-        closeImage();
+        closeImgFile();
     }
 }
 
-void openImage(char file[])
+void openImgFile(char file[])
 {
     fp = fopen(file, "r");  // open image file in read mode
 
@@ -268,14 +267,14 @@ void openImage(char file[])
 
     fseek(fp, 44, SEEK_SET);            // take file pointer to 44th byte
     fread(&BPB_RootClus, 4, 1, fp);     // BPB_RootClus ==> 4 byte, offset - 44 //  set to the cluster number of the first cluster of the root directory
-    currentDirectory = BPB_RootClus;    // contains cluster number of root dir
+    current_dir = BPB_RootClus;    // contains cluster number of root dir
 
-    int offset = LBAToOffset(currentDirectory);  // get offset no. of root dir
+    int offset = LBAToOffset(current_dir);  // get offset no. of root dir
     fseek(fp, offset, SEEK_SET);                 // take fp to root dir pointer
     fread(&dir[0], 32, 16, fp);                  // 
 }
 
-void volume()
+void vol()
 {
     fseek(fp, 71, SEEK_SET);
     fread(&BPB_Volume, 11, 1, fp);
@@ -290,7 +289,7 @@ void get(char *dirname)   // ambiguous
     strncpy(dirstring, dirname, strlen(dirname));
     int cluster = getCluster(dirstring);
     int size = getSizeOfCluster(cluster);
-    FILE *newfp = fopen(token[1], "w");
+    FILE *newfp = fopen(buffer[1], "w");
     fseek(fp, LBAToOffset(cluster), SEEK_SET);
     unsigned char *ptr = malloc(size);
     fread(ptr, size, 1, fp);
@@ -298,22 +297,22 @@ void get(char *dirname)   // ambiguous
     fclose(newfp);
 }
 
-void formatDirectory(char *dirname)  // converts to capital letters  microsoft - 8.3 filename syster where 8 is filename and 3 is for extension
+void format_dir(char *dirname)  // converts to capital letters  microsoft - 8.3 filename syster where 8 is filename and 3 is for extension
 {
     char expanded_name[12];
     memset(expanded_name, ' ', 12);   // initiliaze with whitespace
 
-    char *token = strtok(dirname, "."); // separated by delimeter "." and stored in token array 
+    char *buffer = strtok(dirname, "."); // separated by delimeter "." and stored in buffer array 
 
-    if (token)
+    if (buffer)
     {
-        strncpy(expanded_name, token, strlen(token));  // copies token to expanded_name 
+        strncpy(expanded_name, buffer, strlen(buffer));  // copies buffer to expanded_name 
 
-        token = strtok(NULL, ".");
+        buffer = strtok(NULL, ".");
 
-        if (token)
+        if (buffer)
         {
-            strncpy((char *)(expanded_name + 8), token, strlen(token));  // take only first 8 characters of expanded_name
+            strncpy((char *)(expanded_name + 8), buffer, strlen(buffer));  // take only first 8 characters of expanded_name
         }
 
         expanded_name[11] = '\0';
@@ -329,12 +328,12 @@ void formatDirectory(char *dirname)  // converts to capital letters  microsoft -
         strncpy(expanded_name, dirname, strlen(dirname));
         expanded_name[11] = '\0';
     }
-    strncpy(formattedDirectory, expanded_name, 12);    // ALL capital letters with 8 filename and 3 for extension length
+    strncpy(formatted_dir, expanded_name, 12);    // ALL capital letters with 8 filename and 3 for extension length
 }
 
 int32_t getCluster(char *dirname)
 {
-    formatDirectory(dirname);  // converts all letter to capital
+    format_dir(dirname);  // converts all letter to capital
     int i;
     for (i = 0; i < 16; i++)
     {
@@ -342,7 +341,7 @@ int32_t getCluster(char *dirname)
         memset(directory, '\0', 11);    // set all to '\0'
         memcpy(directory, dir[i].DIR_Name, 11);   // copies dir name to variable
 
-        if (strncmp(directory, formattedDirectory, 11) == 0)   // compares original name and given name
+        if (strncmp(directory, formatted_dir, 11) == 0)   // compares original name and given name
         {
             int cluster = dir[i].DIR_FirstClusterLow;     // initial pointer of that dir
             return cluster;
@@ -351,14 +350,14 @@ int32_t getCluster(char *dirname)
     return -1;  // if no such file is present
 }
 
-int32_t getSizeOfCluster(int32_t cluster)   // returns size of provided cluster
+int32_t getSizeOfCluster(int32_t cluster)           // returns size of provided cluster
 {
     int i;
-    for (i = 0; i < 16; i++)    // traversing all dir
+    for (i = 0; i < 16; i++)                        // traversing all dir
     {
         if (cluster == dir[i].DIR_FirstClusterLow)  // finds correct cluster
         {
-            int size = dir[i].DIR_FileSize;   // gets size of that dir
+            int size = dir[i].DIR_FileSize;         // gets size of that dir
             return size;
         }
     }
@@ -382,17 +381,17 @@ void stat(char *dirname)
     }
 }
 
-void changeDirectory(int32_t cluster)    // "cd" implemented
+void cd(int32_t cluster)                                   // "cd" implemented
 {
-    if (strcmp(token[1], "..") == 0)  // if it command is "cd .."
+    if (strcmp(buffer[1], "..") == 0)                                   // if it command is "cd .."
     {
         int i;
         for (i = 0; i < 16; i++)
         {
-            if (strncmp(dir[i].DIR_Name, "..", 2) == 0)  // finds cluster for ..
+            if (strncmp(dir[i].DIR_Name, "..", 2) == 0)                  // finds cluster for ..
             {
                 int offset = LBAToOffset(dir[i].DIR_FirstClusterLow);    // gets offset
-                currentDirectory = dir[i].DIR_FirstClusterLow;           // stores in current dir
+                current_dir = dir[i].DIR_FirstClusterLow;                // stores in current dir
                 fseek(fp, offset, SEEK_SET);                             // moves pointer to offset
                 fread(&dir[0], 32, 16, fp);                              // read that content
                 return;
@@ -400,12 +399,12 @@ void changeDirectory(int32_t cluster)    // "cd" implemented
         }
     }
     int offset = LBAToOffset(cluster);    // gets offset
-    currentDirectory = cluster;           // stores in current dir
+    current_dir = cluster;           // stores in current dir
     fseek(fp, offset, SEEK_SET);          // moves pointer to offset
     fread(&dir[0], 32, 16, fp);           // read that content
 }
 
-void readFile(char *dirname, int position, int numOfBytes)  // reads file starting from the given position upto the number of bytes mentioned
+void read_file(char *dirname, int position, int numOfBytes)  // reads file starting from the given position upto the number of bytes mentioned
 {
     int cluster = getCluster(dirname);        // gets value of cluster
     int offset = LBAToOffset(cluster);        // gets offset
@@ -415,7 +414,7 @@ void readFile(char *dirname, int position, int numOfBytes)  // reads file starti
     printf("%s\n", bytes);
 }
 
-void getDirectoryInfo()    // prints information
+void get_dir_info()    // prints information
 {
     int i;
     for (i = 0; i < 16; i++)
@@ -424,7 +423,7 @@ void getDirectoryInfo()    // prints information
     }
 }
 
-void printDirectory()  // works as "ls" command
+void ls()  // works as "ls" command
 {
     if (fp == NULL) // image file not opened
     {
@@ -432,7 +431,7 @@ void printDirectory()  // works as "ls" command
         return;
     }
 
-    int offset = LBAToOffset(currentDirectory);  // get offset for current dir
+    int offset = LBAToOffset(current_dir);  // get offset for current dir
     fseek(fp, offset, SEEK_SET);  // moves pointer to offset
 
     int i;
@@ -476,7 +475,7 @@ void decToHex(int dec)
     }
 }
 
-void closeImage()  // closes the currently opened image file
+void closeImgFile()  // closes the currently opened image file
 {
     if (fp == NULL)   // if file is not opened
     {
