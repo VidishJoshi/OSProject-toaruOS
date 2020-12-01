@@ -89,37 +89,6 @@ int LBAToOffset(int32_t sector)
     return ((sector - 2) * BPB_BytesPerSec) + (BPB_BytesPerSec * BPB_RsvdSecCnt) + (BPB_NumFATs * BPB_FATSz32 * BPB_BytesPerSec);
 }
 
-void INIT_INPUT()
-{
-    printf("CMD> ");
-
-    memset(cmd_buffer, '\0', MAX_COMSIZE);
-
-    while (!fgets(cmd_buffer, MAX_COMSIZE, stdin));
-
-    int token_count = 0;
-
-    char *arg_ptr;
-
-    char *working_str = strdup(cmd_buffer);
-
-    char *working_root = working_str;
-
-    memset(&buffer, '\0', MAX_ARG);
-
-    memset(&buffer, '\0', sizeof(MAX_ARG));
-    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_ARG))
-    {
-        buffer[token_count] = strndup(arg_ptr, MAX_COMSIZE); // v[i] = string
-        if (strlen(buffer[token_count]) == 0)                // size = 0 is not valid
-        {
-            buffer[token_count] = NULL;
-        }
-        token_count++;
-    }
-    free(working_root);
-}
-
 void INIT_INPUT()    // patigyu
 {
     printf("CMD> ");
