@@ -446,6 +446,19 @@ void get_dir_info()    // prints information
     }
 }
 
+void print(char *dir)
+{
+	int i=0;
+	for(i=0; i<11; i++)
+	{
+		if((dir[i]>='A' && dir[i]<='Z') || (dir[i]>='0' && dir[i]<='9') || dir[i]==' ')
+		{
+			printf("%c", dir[i]);
+		}	
+	}
+	printf("\n");
+}
+
 void ls()  // works as "ls" command
 {
     if (fp == NULL) // image file not opened
@@ -467,7 +480,7 @@ void ls()  // works as "ls" command
             char *directory = malloc(11);
             memset(directory, '\0', 11);   // initialize directory to '\0'
             memcpy(directory, dir[i].DIR_Name, 11); // copies directory name
-            printf("%s\n", directory); // print
+            print(directory); // print
         }
     }
 }
