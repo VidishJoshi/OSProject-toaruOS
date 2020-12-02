@@ -1,21 +1,20 @@
-/////   all includes   
-#include <stdio.h>
+/////   all includes  
 #include <stdint.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <ctype.h> 
+#include <stdio.h>
+#include <unistd.h>
 #include <string.h>
-#include <ctype.h>
 
-size_t strnlen(const char *str, size_t len)
+size_t strnlen(const char *str, size_t n)
 {
-    for (size_t size = 0; size < len; size++)
+    for (size_t size = 0; size < n; size++)
     {
         if (str[size] == '\0')
             return size;
     }
-    return len;
+    return n;
 }
-
 
 char *strdup(const char *s) {
     size_t size = strlen(s) + 1;
@@ -28,36 +27,36 @@ char *strdup(const char *s) {
 
 char *strndup(const char *s, size_t n) {
     char *p;
-    size_t n1;
+    size_t i;
 
-    for (n1 = 0; n1 < n && s[n1] != '\0'; n1++)
+    for (i = 0; i < n && s[i] != '\0'; i++)
         continue;
     p = malloc(n + 1);
     if (p != NULL) {
-        memcpy(p, s, n1);
-        p[n1] = '\0';
+        memcpy(p, s, i);
+        p[i] = '\0';
     }
     return p;
 }
 
-char *strsep (char **stringp, const char *delim)
+char *strsep (char **st, const char *de)
 {
-  char *begin, *end;
-  begin = *stringp;
-  if (begin == NULL)
+  char *i, *j;
+  i = *st;
+  if (i == NULL)
     return NULL;
   /* Find the end of the token.  */
-  end = begin + strcspn (begin, delim);
-  if (*end)
+  j = i + strcspn (i, de);
+  if (*j)
     {
       /* Terminate the token and set *STRINGP past NUL character.  */
-      *end++ = '\0';
-      *stringp = end;
+      *j++ = '\0';
+      *st = j;
     }
   else
     /* No more delimiters; this is the last token.  */
-    *stringp = NULL;
-  return begin;
+    *st = NULL;
+  return i;
 }
 
 #define WHITESPACE " \t\n" // We want to split our command line up into tokens \
@@ -74,18 +73,19 @@ char *strsep (char **stringp, const char *delim)
 char *buffer[MAX_ARG];          // Parsed input string separated by white space
 char cmd_buffer[MAX_COMSIZE];   // Entire string inputted by the user. It will be parsed into multiple tokens (47)
 
-char BS_OEMName[8];
-int16_t BPB_BytesPerSec;   // The amount of bytes in each sector of the fat32 file image
-int8_t BPB_SecPerClus;     // The amount of sectors per cluster of the fat32 file image
-int16_t BPB_RsvdSecCnt;    // Amount of reserved sectors in the fat32 image
 int8_t BPB_NumFATs;
 int16_t BPB_RootEntCnt;    // Root entry count
 int32_t BPB_FATSz32;
+int8_t BPB_SecPerClus;     // The amount of sectors per cluster of the fat32 file image
+int16_t BPB_RsvdSecCnt;    // Amount of reserved sectors in the fat32 image
 int32_t BPB_RootClus;      // Rootcluster location in the fat32 image
+char BS_OEMName[8];
+int16_t BPB_BytesPerSec;   // The amount of bytes in each sector of the fat32 file image
 
-int32_t RootDirSectors = 0;        // Amount of root directory sectors
-int32_t FirstDataSector = 0;       // Where the first data sector exists in the fat32 file image.
 int32_t FirstSectorofCluster = 0;  // First sector of the data cluster exists at point 0 in the fat32 file image.
+int32_t FirstDataSector = 0;       // Where the first data sector exists in the fat32 file image.
+int32_t RootDirSectors = 0;        // Amount of root directory sectors
+
 
 int32_t current_dir;               // Current working directory
 char formatted_dir[12];            // String to contain the fully formatted string
@@ -93,37 +93,35 @@ char BPB_Volume[11];               // String to store the volume of the fat32 fi
 
 struct __attribute__((__packed__)) DirectoryEntry
 {
-    char DIR_Name[11];               // Name of the directory retrieved
-    uint8_t DIR_Attr;                // Attribute count of the directory retrieved
-    uint8_t Unused1[8];
-    uint16_t DIR_FirstClusterHigh;
-    uint8_t Unused2[4];
-    uint16_t DIR_FirstClusterLow;
-    uint32_t DIR_FileSize;           // Size of the directory (Always 0)
+    char dir_name[11];               // Name of the directory retrieved
+    uint8_t dir_attribute;                // Attribute count of the directory retrieved
+    uint16_t dir_first_cluster_high;
+    uint16_t dir_first_cluster_low;
+    uint32_t dir_file_size;           // Size of the directory (Always 0)
 };
 struct DirectoryEntry dir[16];       //Creation of the directory 
 
 FILE *fp;
 
+void decimal_to_hexadecimal(int dec);                         // Converts decimal numbers to hex to be printed in info (see execute, line 82)
+void stat(char *dir_name);                                    // Prints the attributes of the directory 
+void vol();   
 void INIT_INPUT();                                            // Receives input from the user that is parsed into tokens.
+void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
+int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
+void ls();                                                    // Prints the current working directory (ls)
+void cd(int32_t sector);                                      // Changes directory by user specification (cd)
+void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
+void get();                                                   // Pulls file from the file system image into your cwd (current working directory)                                                // Prints the name of the volume in the fat32 file system image
+void read_file(char *dir_name, int pos, int num_of_bytes);    // Reads the bytes specified by the user in the file of their choice
+int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
 void INIT_EXECUTE();                                          // Main function of the program, acts as the shell receiving commands
 void openImgFile(char file[]);                                // Opens a file system image to be used.
 void closeImgFile();                                          // Closes the file system before exiting the program.
-void ls();                                                    // Prints the current working directory (ls)
-void cd(int32_t sector);                                      // Changes directory by user specification (cd)
-void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
-int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
-int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
-void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
-void get();                                                   // Pulls file from the file system image into your cwd (current working directory)
-void decToHex(int dec);                                       // Converts decimal numbers to hex to be printed in info (see execute, line 82)
-void stat(char *dir_name);                                    // Prints the attributes of the directory 
-void vol();                                                   // Prints the name of the volume in the fat32 file system image
-void read_file(char *dir_name, int pos, int num_of_bytes);     // Reads the bytes specified by the user in the file of their choice
 
 int main()
 {
-    while (1)
+    for (;0 == 0;)
     {
         INIT_INPUT();
         INIT_EXECUTE();
@@ -208,19 +206,19 @@ void INIT_EXECUTE()
     else if (strcmp(buffer[0], "info") == 0)
     {
         printf("BPB_BytesPerSec: %d - ", BPB_BytesPerSec);
-        decToHex(BPB_BytesPerSec);
+        decimal_to_hexadecimal(BPB_BytesPerSec);
         printf("\n");
         printf("BPB_SecPerClus: %d - ", BPB_SecPerClus);
-        decToHex(BPB_SecPerClus);
+        decimal_to_hexadecimal(BPB_SecPerClus);
         printf("\n");
         printf("BPB_RsvdSecCnt: %d - ", BPB_RsvdSecCnt);
-        decToHex(BPB_RsvdSecCnt);
+        decimal_to_hexadecimal(BPB_RsvdSecCnt);
         printf("\n");
         printf("BPB_NumFATs: %d - ", BPB_NumFATs);
-        decToHex(BPB_NumFATs);
+        decimal_to_hexadecimal(BPB_NumFATs);
         printf("\n");
         printf("BPB_FATSz32: %d - ", BPB_FATSz32);
-        decToHex(BPB_FATSz32);
+        decimal_to_hexadecimal(BPB_FATSz32);
         printf("\n");
     }
     else if (strcmp(buffer[0], "ls") == 0)
@@ -362,11 +360,11 @@ int32_t getCluster(char *dirname)
     {
         char *directory = malloc(11);   // allocate 11 bytes
         memset(directory, '\0', 11);    // set all to '\0'
-        memcpy(directory, dir[i].DIR_Name, 11);   // copies dir name to variable
+        memcpy(directory, dir[i].dir_name, 11);   // copies dir name to variable
 
         if (strncmp(directory, formatted_dir, 11) == 0)   // compares original name and given name
         {
-            int cluster = dir[i].DIR_FirstClusterLow;     // initial pointer of that dir
+            int cluster = dir[i].dir_first_cluster_low;     // initial pointer of that dir
             return cluster;
         }
     }
@@ -378,9 +376,9 @@ int32_t getSizeOfCluster(int32_t cluster)           // returns size of provided 
     int i;
     for (i = 0; i < 16; i++)                        // traversing all dir
     {
-        if (cluster == dir[i].DIR_FirstClusterLow)  // finds correct cluster
+        if (cluster == dir[i].dir_first_cluster_low)  // finds correct cluster
         {
-            int size = dir[i].DIR_FileSize;         // gets size of that dir
+            int size = dir[i].dir_file_size;         // gets size of that dir
             return size;
         }
     }
@@ -395,11 +393,11 @@ void stat(char *dirname)
     int i;
     for (i = 0; i < 16; i++)
     {
-        if (cluster == dir[i].DIR_FirstClusterLow)    // finds its cluster
+        if (cluster == dir[i].dir_first_cluster_low)    // finds its cluster
         {
-            printf("Attr: %d\n", dir[i].DIR_Attr);
+            printf("Attr: %d\n", dir[i].dir_attribute);
             printf("Starting Cluster: %d\n", cluster);
-            printf("Cluster High: %d\n", dir[i].DIR_FirstClusterHigh);
+            printf("Cluster High: %d\n", dir[i].dir_first_cluster_high);
         }
     }
 }
@@ -411,10 +409,10 @@ void cd(int32_t cluster)                                   // "cd" implemented
         int i;
         for (i = 0; i < 16; i++)
         {
-            if (strncmp(dir[i].DIR_Name, "..", 2) == 0)                  // finds cluster for ..
+            if (strncmp(dir[i].dir_name, "..", 2) == 0)                  // finds cluster for ..
             {
-                int offset = LBAToOffset(dir[i].DIR_FirstClusterLow);    // gets offset
-                current_dir = dir[i].DIR_FirstClusterLow;                // stores in current dir
+                int offset = LBAToOffset(dir[i].dir_first_cluster_low);    // gets offset
+                current_dir = dir[i].dir_first_cluster_low;                // stores in current dir
                 fseek(fp, offset, SEEK_SET);                             // moves pointer to offset
                 fread(&dir[0], 32, 16, fp);                              // read that content
                 return;
@@ -475,17 +473,17 @@ void ls()  // works as "ls" command
     {
         fread(&dir[i], 32, 1, fp);  // reading ith directory
 
-        if ((dir[i].DIR_Name[0] != (char)0xe5) && (dir[i].DIR_Attr == 0x1 || dir[i].DIR_Attr == 0x10 || dir[i].DIR_Attr == 0x20))
+        if ((dir[i].dir_name[0] != (char)0xe5) && (dir[i].dir_attribute == 0x1 || dir[i].dir_attribute == 0x10 || dir[i].dir_attribute == 0x20))
         {
             char *directory = malloc(11);
             memset(directory, '\0', 11);   // initialize directory to '\0'
-            memcpy(directory, dir[i].DIR_Name, 11); // copies directory name
+            memcpy(directory, dir[i].dir_name, 11); // copies directory name
             print(directory); // print
         }
     }
 }
 
-void decToHex(int dec)
+void decimal_to_hexadecimal(int dec)
 {
     char hex[100];
     int i = 1;
@@ -522,4 +520,3 @@ void closeImgFile()  // closes the currently opened image file
     fclose(fp);   // closes the file
     fp = NULL;    // sets file pointer to NULL
 }
-
