@@ -401,76 +401,111 @@ int32_t getSizeOfCluster(int32_t cluster)           // returns size of provided 
 
 void stat(char *dirname)
 {
-    int cluster = getCluster(dirname);     // obtains cluster
-    int size = getSizeOfCluster(cluster);  // gets size of cluster
-    printf("Size: %d\n", size);            // print file size
-    int i;
-    for (i = 0; i < 16; i++)
+    int cluster = getCluster(dirname);         // obtains cluster
+    printf("Size: %d\n", getSizeOfCluster);    // gets size of cluster
+    int i=0;
+    while(1)
     {
-        if (cluster == dir[i].dir_first_cluster_low)    // finds its cluster
+        int x = cluster;
+        int y =  dir[i].dir_first_cluster_low;
+        if (x == y)    // finds its cluster
         {
-            printf("Attr: %d\n", dir[i].dir_attribute);
-            printf("Starting Cluster: %d\n", cluster);
-            printf("Cluster High: %d\n", dir[i].dir_first_cluster_high);
+            printf("Printing the Attribute: %d\n", dir[i].dir_attribute);
+            printf("The Starting Cluster: %d\n", cluster);
+            printf("The Cluster High: %d\n", dir[i].dir_first_cluster_high);
         }
+        i++;
+        if(i==16)
+            break;
     }
 }
 
 void cd(int32_t cluster)                                   // "cd" implemented
 {
-    if (strcmp(buffer[1], "..") == 0)                                   // if it command is "cd .."
+    string dotdot = "..";
+    int x = strcmp(buffer[1], dotdot);
+    int flag = 0;
+    if (x == 0)                                   // if it command is "cd .."
     {
-        int i;
-        for (i = 0; i < 16; i++)
+        int i=0;
+        while(1)
         {
-            if (strncmp(dir[i].dir_name, "..", 2) == 0)                  // finds cluster for ..
+            int y = 2; 
+            x=strncmp(dir[i].dir_name,dotdot,y);
+            if (x == 0)                  // finds cluster for ..
             {
-                int offset = LBAToOffset(dir[i].dir_first_cluster_low);    // gets offset
-                current_dir = dir[i].dir_first_cluster_low;                // stores in current dir
-                fseek(fp, offset, SEEK_SET);                             // moves pointer to offset
-                fread(&dir[0], 32, 16, fp);                              // read that content
-                return;
+                fseek(fp, LBAToOffset(dir[i].dir_first_cluster_low), SEEK_SET);     // moves pointer to offset
+                fread(&dir[0], 32, 16, fp);                                         // read that content
+                flag=1;
+                break;
             }
+            i++;
+            if(i==16)
+                break;
         }
     }
-    int offset = LBAToOffset(cluster);    // gets offset
-    current_dir = cluster;           // stores in current dir
-    fseek(fp, offset, SEEK_SET);          // moves pointer to offset
-    fread(&dir[0], 32, 16, fp);           // read that content
+    if(flag==0)
+    {
+        fseek(fp, LBAToOffset(cluster), SEEK_SET);          // moves pointer to offset
+        fread(&dir[0], 32, 16, fp);           // read that content
+    }
+    else
+    {
+            return;
+    }
+    
+   
 }
 
 void read_file(char *dirname, int position, int numOfBytes)  // reads file starting from the given position upto the number of bytes mentioned
 {
-    int cluster = getCluster(dirname);        // gets value of cluster
-    int offset = LBAToOffset(cluster);        // gets offset
-    fseek(fp, offset + position, SEEK_SET);   // moves pointer from where we need to read the file
-    char *bytes = malloc(numOfBytes);         // allocate given size
+    fseek(fp,  LBAToOffset(getCluster(dirname)) + position, SEEK_SET);   // moves pointer from where we need to read the file
     fread(bytes, numOfBytes, 1, fp);          // reads the entire content till size numofbytes
     printf("%s\n", bytes);
 }
 
 void get_dir_info()    // prints information
 {
-    int i;
-    for (i = 0; i < 16; i++)
+    int i=0;
+
+    while(1)
     {
         fread(&dir[i], 32, 1, fp);
+        i++;
+        if(i==16)
+            break;
     }
 }
 
 void print(char *dir)
 {
-	int i=0;
-	for(i=0; i<11; i++)
+	int itr=0;
+    int last_pointer = 11;
+	for(itr=0; i<last_pointer; itr++)
 	{
-		if((dir[i]>='A' && dir[i]<='Z') || (dir[i]>='0' && dir[i]<='9') || dir[i]==' ')
-		{
-			printf("%c", dir[i]);
-		}	
+		if((dir[itr]>='A' && dir[itr]<='Z'))
+			printf("%c", dir[i]);	
+        if ( (dir[itr]>='0' && dir[itr]<='9') )
+            printf("%c", dir[itr]);
+        if(dir[itr]==' ')
+            printf("%c",dir[itr]);
+        else
+        {
+                continue;
+        }
 	}
 	printf("\n");
 }
-
+void printing_dir(int dirs)
+{
+    char *directory = malloc(11); // end the directory with ending symbol
+    directory[11] = '\0';
+    int i;
+    for(i=0;i<11;i++)
+        *directory[i] = dir[dirs].dirs_name; //copy the directory name
+    
+    print(directory); //pint
+}
 void ls()  // works as "ls" command
 {    
     int offset = LBAToOffset(current_dir);  // get offset for current dir
@@ -485,12 +520,7 @@ void ls()  // works as "ls" command
         {
             if((dir[dirs].dir_attribute == 0x1 || dir[dirs].dir_attribute == 0x10 || dir[dirs].dir_attribute == 0x20 )
             {
-                char *directory = malloc(11);   
-                int itr;
-                directory[11] = '\0'; // initialize directory to '\0'
-                for(itr=0; itr <11; itr++)
-                    *directory[i] = dir[dirs].dirs_name;  // copy directory name
-                print(directory); // print
+                printing_dir(dirs);
             }  
         }
     }
@@ -498,34 +528,24 @@ void ls()  // works as "ls" command
 
 void decimal_to_hexadecimal(int dec)
 {
-    char hexaDeciNum[100]; 
-    int n = dec, itr = 0;  
-    
-    while(n!=0) 
+    int n=dec,i,itr = 0, adder;
+    char output[50];
+
+    while(1) 
     {
-        // temporary variable to store remainder 
-        int temp  = 0;  
-        // storing remainder in temp variable. 
-        temp = n % 16; 
-          
-        // check if temp < 10 
-        if(temp < 10) 
-        { 
-            hexaDeciNum[i] = temp + 48; 
-            i++; 
-        } 
+        adder = 0;
+        if(n<=0)
+            break;  
+        adder=n%16; 
+        if(temp >= 10) 
+            output[itr] = adder + 55;
         else
-        { 
-            hexaDeciNum[i] = temp + 55; 
-            i++; 
-        } 
-          
+            output[itr] = adder + 48;
+        itr++;  
         n = n/16; 
-    } 
-      
-    // printing hexadecimal number array in reverse order 
-    for(int j=i-1; j>=0; j--) 
-        cout << hexaDeciNum[j]; 
+    }  
+    for(i=itr-1; i>=0; i--) 
+        printf("%c",output[i]); 
 }
 
 void closeImgFile()  // closes the currently opened image file
