@@ -472,65 +472,69 @@ void print(char *dir)
 }
 
 void ls()  // works as "ls" command
-{
-    if (fp == NULL) // image file not opened
-    {
-        printf("No image is opened\n");
-        return;
-    }
-
+{    
     int offset = LBAToOffset(current_dir);  // get offset for current dir
     fseek(fp, offset, SEEK_SET);  // moves pointer to offset
 
-    int i;
-    for (i = 0; i < 16; i++)  // traversing through all directories
+    int dirs;
+    for (dirs = 0; dirs < 16; dirs++)  // traversing through all directories
     {
-        fread(&dir[i], 32, 1, fp);  // reading ith directory
+        fread(&dir[dirs], 32, 1, fp);  // reading ith directory
 
-        if ((dir[i].dir_name[0] != (char)0xe5) && (dir[i].dir_attribute == 0x1 || dir[i].dir_attribute == 0x10 || dir[i].dir_attribute == 0x20))
+        if ((dir[dirs].dir_name[0] != (char)0xe5))
         {
-            char *directory = malloc(11);
-            memset(directory, '\0', 11);   // initialize directory to '\0'
-            memcpy(directory, dir[i].dir_name, 11); // copies directory name
-            print(directory); // print
+            if((dir[dirs].dir_attribute == 0x1 || dir[dirs].dir_attribute == 0x10 || dir[dirs].dir_attribute == 0x20 )
+            {
+                char *directory = malloc(11);   
+                int itr;
+                directory[11] = '\0'; // initialize directory to '\0'
+                for(itr=0; itr <11; itr++)
+                    *directory[i] = dir[dirs].dirs_name;  // copy directory name
+                print(directory); // print
+            }  
         }
     }
 }
 
 void decimal_to_hexadecimal(int dec)
 {
-    char hex[100];
-    int i = 1;
-    int j;
-    int temp;
-    while (dec != 0)
+    char hexaDeciNum[100]; 
+    int n = dec, itr = 0;  
+    
+    while(n!=0) 
     {
-        temp = dec % 16;
-        if (temp < 10)
-        {
-            temp += 48;
-        }
+        // temporary variable to store remainder 
+        int temp  = 0;  
+        // storing remainder in temp variable. 
+        temp = n % 16; 
+          
+        // check if temp < 10 
+        if(temp < 10) 
+        { 
+            hexaDeciNum[i] = temp + 48; 
+            i++; 
+        } 
         else
-        {
-            temp += 55;
-        }
-        hex[i++] = temp;
-        dec /= 16;
-    }
-    for (j = i - 1; j > 0; j--)
-    {
-        printf("%c", hex[j]);
-    }
+        { 
+            hexaDeciNum[i] = temp + 55; 
+            i++; 
+        } 
+          
+        n = n/16; 
+    } 
+      
+    // printing hexadecimal number array in reverse order 
+    for(int j=i-1; j>=0; j--) 
+        cout << hexaDeciNum[j]; 
 }
 
 void closeImgFile()  // closes the currently opened image file
 {
     if (fp == NULL)   // if file is not opened
     {
-        printf("Error: File system not open.");
+        printf(" File Not open !!");
         return;
     }
-
-    fclose(fp);   // closes the file
-    fp = NULL;    // sets file pointer to NULL
+    //now close the file pointer
+    fclose(fp);
 }
