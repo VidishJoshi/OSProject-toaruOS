@@ -59,10 +59,24 @@ char *strsep (char **st, const char *de)
   return i;
 }
 
-#define WHITESPACE " \t\n" // We want to split our command line up into tokens \
-                           // so we need to define what delimits our tokens.   \
-                           // In this case  white space                        \
-                           // will separate the tokens on our command line
+void decimal_to_hexadecimal(int dec);                         // Converts decimal numbers to hex to be printed in info (see execute, line 82)
+void stat(char *dir_name);                                    // Prints the attributes of the directory 
+void vol();   
+void INIT_ARGUMENTS();                                            // Receives input from the user that is parsed into tokens.
+void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
+int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
+void ls();                                                    // Prints the current working directory (ls)
+void cd(int32_t sector);                                      // Changes directory by user specification (cd)
+void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
+void get();                                                   // Pulls file from the file system image into your cwd (current working directory)                                                // Prints the name of the volume in the fat32 file system image
+void read_file(char *dir_name, int pos, int num_of_bytes);    // Reads the bytes specified by the user in the file of their choice
+int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
+void INIT_RUNFAT();                                          // Main function of the program, acts as the shell receiving commands
+void openImgFile(char file[]);                                // Opens a file system image to be used.
+void closeImgFile();                                          // Closes the file system before exiting the program.
+
+#define WHITESPACE " \t\n" 
+// using whilte space as delimeter for command line spliting. token separation                           
 
 #define MAX_COMSIZE 255         // The maximum command-line size
 
@@ -72,24 +86,29 @@ char *strsep (char **st, const char *de)
 
 char *buffer[MAX_ARG];          // Parsed input string separated by white space
 char cmd_buffer[MAX_COMSIZE];   // Entire string inputted by the user. It will be parsed into multiple tokens (47)
-
-int8_t BPB_NumFATs;
-int16_t BPB_RootEntCnt;    // Root entry count
-int32_t BPB_FATSz32;
-int8_t BPB_SecPerClus;     // The amount of sectors per cluster of the fat32 file image
-int16_t BPB_RsvdSecCnt;    // Amount of reserved sectors in the fat32 image
-int32_t BPB_RootClus;      // Rootcluster location in the fat32 image
 char BS_OEMName[8];
-int16_t BPB_BytesPerSec;   // The amount of bytes in each sector of the fat32 file image
-
-int32_t FirstSectorofCluster = 0;  // First sector of the data cluster exists at point 0 in the fat32 file image.
-int32_t FirstDataSector = 0;       // Where the first data sector exists in the fat32 file image.
-int32_t RootDirSectors = 0;        // Amount of root directory sectors
-
-
-int32_t current_dir;               // Current working directory
 char formatted_dir[12];            // String to contain the fully formatted string
 char BPB_Volume[11];               // String to store the volume of the fat32 file image
+
+
+int8_t BPB_NumFATs , BPB_SecPerClus;     
+// The amount of sectors per cluster of the fat32 file image
+
+int16_t BPB_RootEntCnt, BPB_RsvdSecCnt, BPB_BytesPerSec;   
+/*
+this denotes amount of bytes in each secotr  
+rootEntCnt is count of root entry
+Reserverd sector count in iamge file 
+*/
+
+int32_t BPB_FATSz32, BPB_RootClus, FirstSectorofCluster = 0, FirstDataSector = 0,  RootDirSectors = 0, current_dir;       
+/*
+location of root cluster - rootlus
+offset 0 denotes the location of first sector of cluster
+root directory sectors - rootdirsectors
+current working directory - 
+*/
+
 
 struct __attribute__((__packed__)) DirectoryEntry
 {
@@ -103,28 +122,13 @@ struct DirectoryEntry dir[16];       //Creation of the directory
 
 FILE *fp;
 
-void decimal_to_hexadecimal(int dec);                         // Converts decimal numbers to hex to be printed in info (see execute, line 82)
-void stat(char *dir_name);                                    // Prints the attributes of the directory 
-void vol();   
-void INIT_INPUT();                                            // Receives input from the user that is parsed into tokens.
-void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
-int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
-void ls();                                                    // Prints the current working directory (ls)
-void cd(int32_t sector);                                      // Changes directory by user specification (cd)
-void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
-void get();                                                   // Pulls file from the file system image into your cwd (current working directory)                                                // Prints the name of the volume in the fat32 file system image
-void read_file(char *dir_name, int pos, int num_of_bytes);    // Reads the bytes specified by the user in the file of their choice
-int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
-void INIT_EXECUTE();                                          // Main function of the program, acts as the shell receiving commands
-void openImgFile(char file[]);                                // Opens a file system image to be used.
-void closeImgFile();                                          // Closes the file system before exiting the program.
 
 int main()
 {
     for (;0 == 0;)
     {
-        INIT_INPUT();
-        INIT_EXECUTE();
+        INIT_ARGUMENTS();
+        INIT_RUNFAT();
     }
     return 0;
 }
@@ -141,69 +145,39 @@ int LBAToOffset(int32_t sector)
     return ((sector - 2) * BPB_BytesPerSec) + (BPB_BytesPerSec * BPB_RsvdSecCnt) + (BPB_NumFATs * BPB_FATSz32 * BPB_BytesPerSec);
 }
 
-void INIT_INPUT()    // patigyu
+void INIT_ARGUMENTS()    // patigyu
 {
     printf("CMD> ");
+    //console like application , here the commands are taken as input
 
     memset(cmd_buffer, '\0', MAX_COMSIZE);
 
-    while (!fgets(cmd_buffer, MAX_COMSIZE, stdin))
-        ;
+    while (!fgets(cmd_buffer, MAX_COMSIZE, standard_input))
+        ; //wait for the input. if yes store it in command buffer data structure
 
-    int token_count = 0;
+    int argument_cnt = 0;
 
-    char *arg_ptr;
+    char *argument_pointer, *working_str = strdup(cmd_buffer), *working_root = working_str;
 
-    char *working_str = strdup(cmd_buffer);
+    memset(&buffer, '\0', MAX_ARG), memset(&buffer, '\0', sizeof(MAX_ARG));
+    //filling the buffer with end marker
 
-    char *working_root = working_str;
-
-    memset(&buffer, '\0', MAX_ARG);
-
-    memset(&buffer, '\0', sizeof(MAX_ARG));
-    while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) && (token_count < MAX_ARG))
+    while (((argument_pointer = strsep(&working_str, WHITESPACE)) != NULL) && (argument_cnt < MAX_ARG))
     {
-        buffer[token_count] = strndup(arg_ptr, MAX_COMSIZE); // v[i] = string
-        if (strlen(buffer[token_count]) == 0)                // size = 0 is not valid
-        {
-            buffer[token_count] = NULL;
-        }
-        token_count++;
+        buffer[argument_cnt] = strndup(argument_pointer, MAX_COMSIZE); 
+        // v[i] = string
+        // as token count is initialized as zero so we count from 0. store every argument from the input in 
+        // buffer character 2d array.
+        if (strlen(buffer[argument_cnt]) == 0)                // size = 0 is not valid
+            buffer[argument_cnt] = NULL;
+        
+        argument_cnt++;
     }
     free(working_root);
 }
-
-void INIT_EXECUTE()
+void arg_cmp_func(string s)
 {
-    
-    if (buffer[0] == NULL)   // If the user just hits enter, do nothing
-    {
-        return;
-    }
-    if (strcmp(buffer[0], "open") == 0)  // if command entered is "open"
-    {
-        if (fp != NULL)    // if already occupied , some image file is already open
-        {
-            printf("Error: File system image already open.\n");
-            return;
-        }
-        if (buffer[1] != NULL && fp == NULL)  // ok condition
-        {
-            openImgFile(buffer[1]);  // function to open image file
-        }
-        else if (buffer[1] == NULL) // file name not given
-        {
-            printf("ERR: Must give argument of file to open\n");
-        }
-        return;
-    }
-    else if (fp == NULL)  // if open not execute yet then first do it
-    {
-        printf("Error: File system image must be opened first.\n");
-        return;
-    }
-    // different commands to be implemented
-    else if (strcmp(buffer[0], "info") == 0)
+    if(s=="info")
     {
         printf("BPB_BytesPerSec: %d - ", BPB_BytesPerSec);
         decimal_to_hexadecimal(BPB_BytesPerSec);
@@ -221,44 +195,84 @@ void INIT_EXECUTE()
         decimal_to_hexadecimal(BPB_FATSz32);
         printf("\n");
     }
-    else if (strcmp(buffer[0], "ls") == 0)
-    {
+    if(s=="get")
+        get(buffer[1]);
+    if(s=="volume")
+        vol();
+    if(s=="stat")
+        get(buffer[1]);
+    if(s=="ls")
         ls();
-    }
-    else if (strcmp(buffer[0], "cd") == 0)
+    if(s=="close")
+        closeImgFile();
+    if(s=="cd")
+        cd(getCluster(buffer[1]));
+    if(s=="read")
+        read_file(buffer[1], atoi(buffer[2]), atoi(buffer[3]));
+    
+}
+void INIT_RUNFAT()
+{
+    // after storing the argument or the input data in the buffer array, we now process it
+    if (buffer[0]==NULL)   // If the user just hits enter, do nothing
+        return;
+    
+    if (strcmp(buffer[0], "open") == 0)  // if command entered is "open"
     {
-        if (buffer[1] == NULL)
+        if (fp!=NULL)    
         {
-            printf("ERR: Please provide which directory you would like to open\n");
+            // if already occupied , some image file is already open
+            printf(" Image File already opended!!! \n");
             return;
         }
-        cd(getCluster(buffer[1]));
+        if (buffer[1]==NULL)  
+        {
+            // file name not given
+            printf(" The arguments are not provided. Error in opening file\n");
+            
+        }
+        else if (buffer[1]!=NULL && fp==NULL) 
+        {
+            // ok condition
+            openImgFile(buffer[1]);  // function to open image file
+        }
+        return;
+    } // different commands to be implemented
+    else if (strcmp(buffer[0], "info") == 0)
+    {
+        arg_cmp_func("info");
     }
     else if (strcmp(buffer[0], "get") == 0)
     {
-        get(buffer[1]);
-    }
-    else if (strcmp(buffer[0], "stat") == 0)
-    {
-        stat(buffer[1]);
-    }
-    else if (strcmp(buffer[0], "volume") == 0)
-    {
-        vol();
+        arg_cmp_func("get");
     }
     else if (strcmp(buffer[0], "read") == 0)
     {
         if (buffer[1] == NULL || buffer[2] == NULL || buffer[3] == NULL)
         {
-            printf("Please input valid arguments.\n");
+            printf("Please valid input arguments.\n");
             return;
         }
-        read_file(buffer[1], atoi(buffer[2]), atoi(buffer[3]));
+        arg_cmp_func("read");    
+    }
+    else if (strcmp(buffer[0], "volume") == 0)
+        arg_cmp_func("volume");
+    else if (strcmp(buffer[0], "stat") == 0)
+        arg_cmp_func("stat");    
+    else if (strcmp(buffer[0], "ls") == 0)
+        arg_cmp_func("ls");
+    else if (strcmp(buffer[0], "cd") == 0)
+    {
+        if (buffer[1] == NULL)
+        {
+            printf("The directory to change not provided!! Err\n");
+            return;
+        }
+        arg_cmp_func("cd");
     }
     else if (strcmp(buffer[0], "close") == 0)
-    {
-        closeImgFile();
-    }
+        arg_cmp_func("close");
+    
 }
 
 void openImgFile(char file[])

@@ -8,14 +8,6 @@
 
 **Group Number**: *3*
 
-**Group Members**:
-
-|     Name      | Enrolment Number |
-| :-----------: | :--------------: |
-| Yashil Depani |    AU1841005     |
-| Vidish Joshi  |    AU1841019     |
-|  Manav Patel  |    AU1841037     |
-
 
 
 ## OSProject - toaruOS
