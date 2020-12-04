@@ -60,17 +60,17 @@ char *strsep (char **st, const char *de)
 }
 
 void decimal_to_hexadecimal(int dec);                         // Converts decimal numbers to hex to be printed in info (see execute, line 82)
-void stat(char *dir_name);                                    // Prints the attributes of the directory 
+void statistics(char *dir_name);                                    // Prints the attributes of the directory 
 void vol();   
 void INIT_ARGUMENTS();                                            // Receives input from the user that is parsed into tokens.
 void get_dir_info();                                          // Prints directory info stored in struct above (line 67)
-int32_t getCluster(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
+int32_t obtain_clus(char *dir_name);                           // Receives the cluster of information to be used in execute (line 82)
 void ls();                                                    // Prints the current working directory (ls)
-void cd(int32_t sector);                                      // Changes directory by user specification (cd)
+void cd(int32_t SEC);                                      // Changes directory by user specification (cd)
 void format_dir(char *dir_name);                              // Formats the directory to remove whitespace and concatenate a period between the name and extension.
 void get();                                                   // Pulls file from the file system image into your cwd (current working directory)                                                // Prints the name of the volume in the fat32 file system image
 void read_file(char *dir_name, int pos, int num_of_bytes);    // Reads the bytes specified by the user in the file of their choice
-int32_t getSizeOfCluster(int32_t cluster);                    // Receives of the size of the cluster as an attribute
+int32_t find_clus_size(int32_t cluster);                    // Receives of the size of the cluster as an attribute
 void INIT_RUNFAT();                                          // Main function of the program, acts as the shell receiving commands
 void openImgFile(char file[]);                                // Opens a file system image to be used.
 void closeImgFile();                                          // Closes the file system before exiting the program.
@@ -98,7 +98,7 @@ int16_t BPB_RootEntCnt, BPB_RsvdSecCnt, BPB_BytesPerSec;
 /*
 this denotes amount of bytes in each secotr  
 rootEntCnt is count of root entry
-Reserverd sector count in iamge file 
+Reserverd SEC count in iamge file 
 */
 
 int32_t BPB_FATSz32, BPB_RootClus, FirstSectorofCluster = 0, FirstDataSector = 0,  RootDirSectors = 0, current_dir;       
@@ -134,15 +134,15 @@ int main()
 }
 
 
-int LBAToOffset(int32_t sector)
+int LBAToOffset(int32_t SEC)
 {
-    if (sector == 0)  // want offset for root dir
-        sector = 2;
+    if (SEC == 0)  // want offset for root dir
+        SEC = 2;
     // FAT #1 starts at address BPB_RsvdSecCnt * BPB_BytsPerSec
     // BPB_NumFATs * BPB_FATSz32 * BPB_BytsPerSec  ==> total FAT size
     // Clusters are each (BPB_SecPerClus * BPB_BytsPerSec) in bytes
     // Clusters start at address (BPB_NumFATs * BPB_FATSz32 * BPB_BytsPerSec) + (BPB_RsvdSecCnt * BPB_BytsPerSec)  ==> location of root dir
-    return ((sector - 2) * BPB_BytesPerSec) + (BPB_BytesPerSec * BPB_RsvdSecCnt) + (BPB_NumFATs * BPB_FATSz32 * BPB_BytesPerSec);
+    return ((SEC - 2) * BPB_BytesPerSec) + (BPB_BytesPerSec * BPB_RsvdSecCnt) + (BPB_NumFATs * BPB_FATSz32 * BPB_BytesPerSec);
 }
 
 void INIT_ARGUMENTS()    // patigyu
@@ -175,9 +175,9 @@ void INIT_ARGUMENTS()    // patigyu
     }
     free(working_root);
 }
-void arg_cmp_func(string s)
+void arg_cmp_func(char *s)
 {
-    if(s=="info")
+    if(strcmp(s,"info") == 0)
     {
         printf("BPB_BytesPerSec: %d - ", BPB_BytesPerSec);
         decimal_to_hexadecimal(BPB_BytesPerSec);
@@ -195,19 +195,19 @@ void arg_cmp_func(string s)
         decimal_to_hexadecimal(BPB_FATSz32);
         printf("\n");
     }
-    if(s=="get")
+    if(strcmp(s,"get") == 0)
         get(buffer[1]);
-    if(s=="volume")
+    if(strcmp(s,"volume") == 0)
         vol();
-    if(s=="stat")
-        get(buffer[1]);
-    if(s=="ls")
+    if(strcmp(s,"stat") == 0)
+        statistics(buffer[1]);
+    if(strcmp(s,"ls") == 0)
         ls();
-    if(s=="close")
+    if(strcmp(s,"close") == 0)
         closeImgFile();
-    if(s=="cd")
-        cd(getCluster(buffer[1]));
-    if(s=="read")
+    if(strcmp(s,"cd") == 0)
+        cd(obtain_clus(buffer[1]));
+    if(strcmp(s,"read") == 0)
         read_file(buffer[1], atoi(buffer[2]), atoi(buffer[3]));
     
 }
@@ -309,27 +309,22 @@ void openImgFile(char file[])
     fread(&dir[0], 32, 16, fp);                  // 
 }
 
+void closeImgFile()  // closes the currently opened image file
+{
+    if (fp == NULL)   // if file is not opened
+    {
+        printf(" File Not open !!");
+        return;
+    }
+    //now close the file pointer
+    fclose(fp);
+}
+
 void vol()
 {
     fseek(fp, 71, SEEK_SET);
     fread(&BPB_Volume, 11, 1, fp);
     printf("Volume name: %s\n", BPB_Volume);
-}
-
-
-
-void get(char *dirname)   // ambiguous
-{
-    char *dirstring = (char *)malloc(strlen(dirname));
-    strncpy(dirstring, dirname, strlen(dirname));
-    int cluster = getCluster(dirstring);
-    int size = getSizeOfCluster(cluster);
-    FILE *newfp = fopen(buffer[1], "w");
-    fseek(fp, LBAToOffset(cluster), SEEK_SET);
-    unsigned char *ptr = malloc(size);
-    fread(ptr, size, 1, fp);
-    fwrite(ptr, size, 1, newfp);
-    fclose(newfp);
 }
 
 void format_dir(char *dirname)  // converts to capital letters  microsoft - 8.3 filename syster where 8 is filename and 3 is for extension
@@ -352,8 +347,8 @@ void format_dir(char *dirname)  // converts to capital letters  microsoft - 8.3 
 
         expanded_name[11] = '\0';
 
-        int i;
-        for (i = 0; i < 11; i++)
+        int  = -1;
+        while(++i < 11)
         {
             expanded_name[i] = toupper(expanded_name[i]);  // converting everything to uppercase
         }
@@ -366,58 +361,72 @@ void format_dir(char *dirname)  // converts to capital letters  microsoft - 8.3 
     strncpy(formatted_dir, expanded_name, 12);    // ALL capital letters with 8 filename and 3 for extension length
 }
 
-int32_t getCluster(char *dirname)
+int32_t obtain_clus(char *dir_name)
 {
-    format_dir(dirname);  // converts all letter to capital
-    int i;
-    for (i = 0; i < 16; i++)
+    format_dir(dir_name);  // converts all letter to capital
+    int dirs = -1;
+    while(++dirs < 16)
     {
         char *directory = malloc(11);   // allocate 11 bytes
         memset(directory, '\0', 11);    // set all to '\0'
-        memcpy(directory, dir[i].dir_name, 11);   // copies dir name to variable
+
+        memcpy(directory, dir[dirs].dir_name, 11);   // copies dir name to variable
 
         if (strncmp(directory, formatted_dir, 11) == 0)   // compares original name and given name
         {
-            int cluster = dir[i].dir_first_cluster_low;     // initial pointer of that dir
-            return cluster;
+            int Cls = dir[dirs].dir_first_cluster_low;     // initial pointer of that dir
+            return Cls;
         }
     }
     return -1;  // if no such file is present
 }
 
-int32_t getSizeOfCluster(int32_t cluster)           // returns size of provided cluster
+void statistics(char *dirname)
 {
-    int i;
-    for (i = 0; i < 16; i++)                        // traversing all dir
+    int cluster = obtain_clus(dirname);         // obtains cluster
+    printf("Size: %d\n", find_clus_size);    // gets size of cluster
+    int dirs=0;
+    while(1)
     {
-        if (cluster == dir[i].dir_first_cluster_low)  // finds correct cluster
+        int x = cluster;
+        int y =  dir[dirs].dir_first_cluster_low;
+        if (x == y)    // finds its cluster
         {
-            int size = dir[i].dir_file_size;         // gets size of that dir
+            printf("Printing the Attribute: %d\n", dir[dirs].dir_attribute);
+            printf("The Starting Cluster: %d\n", cluster);
+            printf("The Cluster High: %d\n", dir[dirs].dir_first_cluster_high);
+        }
+        dirs++;
+        if(dirs==16)
+            break;
+    }
+}
+
+int32_t find_clus_size(int32_t cluster)           // returns size of provided cluster
+{
+    int dirs = -1;
+    while(++dirs < 16)                        // traversing all dir
+    {
+        if (cluster == dir[dirs].dir_first_cluster_low)  // finds correct cluster
+        {
+            int size = dir[dirs].dir_file_size;         // gets size of that dir
             return size;
         }
     }
     return -1;
 }
 
-void stat(char *dirname)
+void get(char *dirname)   // ambiguous
 {
-    int cluster = getCluster(dirname);         // obtains cluster
-    printf("Size: %d\n", getSizeOfCluster);    // gets size of cluster
-    int i=0;
-    while(1)
-    {
-        int x = cluster;
-        int y =  dir[i].dir_first_cluster_low;
-        if (x == y)    // finds its cluster
-        {
-            printf("Printing the Attribute: %d\n", dir[i].dir_attribute);
-            printf("The Starting Cluster: %d\n", cluster);
-            printf("The Cluster High: %d\n", dir[i].dir_first_cluster_high);
-        }
-        i++;
-        if(i==16)
-            break;
-    }
+    char *dirstring = (char *)malloc(strlen(dirname));
+    strncpy(dirstring, dirname, strlen(dirname));
+    int cluster = obtain_clus(dirstring), size = find_clus_size(cluster);
+    FILE *newfp = fopen(buffer[1], "w");
+    fseek(fp, LBAToOffset(cluster), SEEK_SET);
+    unsigned char *ptr = malloc(size);
+    fread(ptr, size, 1, fp);
+    fwrite(ptr, size, 1, newfp);
+    fclose(newfp);
 }
 
 void cd(int32_t cluster)                                   // "cd" implemented
@@ -427,20 +436,20 @@ void cd(int32_t cluster)                                   // "cd" implemented
     int flag = 0;
     if (x == 0)                                   // if it command is "cd .."
     {
-        int i=0;
+        int dirs=0;
         while(1)
         {
             int y = 2; 
-            x=strncmp(dir[i].dir_name,dotdot,y);
+            x=strncmp(dir[dirs].dir_name,dotdot,y);
             if (x == 0)                  // finds cluster for ..
             {
-                fseek(fp, LBAToOffset(dir[i].dir_first_cluster_low), SEEK_SET);     // moves pointer to offset
+                fseek(fp, LBAToOffset(dir[dirs].dir_first_cluster_low), SEEK_SET);     // moves pointer to offset
                 fread(&dir[0], 32, 16, fp);                                         // read that content
                 flag=1;
                 break;
             }
-            i++;
-            if(i==16)
+            dirs++;
+            if(dirs==16)
                 break;
         }
     }
@@ -459,20 +468,20 @@ void cd(int32_t cluster)                                   // "cd" implemented
 
 void read_file(char *dirname, int position, int numOfBytes)  // reads file starting from the given position upto the number of bytes mentioned
 {
-    fseek(fp,  LBAToOffset(getCluster(dirname)) + position, SEEK_SET);   // moves pointer from where we need to read the file
+    fseek(fp,  LBAToOffset(obtain_clus(dirname)) + position, SEEK_SET);   // moves pointer from where we need to read the file
     fread(bytes, numOfBytes, 1, fp);          // reads the entire content till size numofbytes
     printf("%s\n", bytes);
 }
 
 void get_dir_info()    // prints information
 {
-    int i=0;
+    int dirs=0;
 
     while(1)
     {
-        fread(&dir[i], 32, 1, fp);
-        i++;
-        if(i==16)
+        fread(&dir[dirs], 32, 1, fp);
+        dirs++;
+        if(dirs==16)
             break;
     }
 }
@@ -481,17 +490,17 @@ void print(char *dir)
 {
 	int itr=0;
     int last_pointer = 11;
-	for(itr=0; i<last_pointer; itr++)
+	for(itr=0; itr<last_pointer; itr++)
 	{
 		if((dir[itr]>='A' && dir[itr]<='Z'))
-			printf("%c", dir[i]);	
+			printf("%c", dir[itr]);	
         if ( (dir[itr]>='0' && dir[itr]<='9') )
             printf("%c", dir[itr]);
         if(dir[itr]==' ')
             printf("%c",dir[itr]);
         else
         {
-                continue;
+            continue;
         }
 	}
 	printf("\n");
@@ -500,9 +509,9 @@ void printing_dir(int dirs)
 {
     char *directory = malloc(11); // end the directory with ending symbol
     directory[11] = '\0';
-    int i;
-    for(i=0;i<11;i++)
-        *directory[i] = dir[dirs].dirs_name; //copy the directory name
+    int itr = -1;
+    while(++itr < 11)
+        *directory[itr] = dir[itr].dirs_name; //copy the directory name
     
     print(directory); //pint
 }
@@ -511,14 +520,16 @@ void ls()  // works as "ls" command
     int offset = LBAToOffset(current_dir);  // get offset for current dir
     fseek(fp, offset, SEEK_SET);  // moves pointer to offset
 
-    int dirs;
-    for (dirs = 0; dirs < 16; dirs++)  // traversing through all directories
+    int dirs = -1;
+    while(++dirs < 16)  // traversing through all directories
     {
         fread(&dir[dirs], 32, 1, fp);  // reading ith directory
 
         if ((dir[dirs].dir_name[0] != (char)0xe5))
         {
-            if((dir[dirs].dir_attribute == 0x1 || dir[dirs].dir_attribute == 0x10 || dir[dirs].dir_attribute == 0x20 )
+            if((dir[dirs].dir_attribute == 0x1 || 
+                dir[dirs].dir_attribute == 0x10 || 
+                dir[dirs].dir_attribute == 0x20 )
             {
                 printing_dir(dirs);
             }  
@@ -548,13 +559,3 @@ void decimal_to_hexadecimal(int dec)
         printf("%c",output[i]); 
 }
 
-void closeImgFile()  // closes the currently opened image file
-{
-    if (fp == NULL)   // if file is not opened
-    {
-        printf(" File Not open !!");
-        return;
-    }
-    //now close the file pointer
-    fclose(fp);
-}
