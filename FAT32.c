@@ -431,7 +431,7 @@ void get(char *dirname)   // ambiguous
 
 void cd(int32_t cluster)                                   // "cd" implemented
 {
-    string dotdot = "..";
+    char *dotdot = "..";
     int x = strcmp(buffer[1], dotdot);
     int flag = 0;
     if (x == 0)                                   // if it command is "cd .."
