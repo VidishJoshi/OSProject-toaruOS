@@ -110,12 +110,14 @@ struct __attribute__((__packed__)) dir_etry
 {
     char dir_name[11];               // Name of the DIR retrieved
     uint8_t dir_attribute;                // Attribute count of the DIR retrieved
-    uint16_t dir_first_cluster_high;
-    uint16_t dir_first_cluster_low;
+    uint16_t dir_first_cluster_high, dir_first_cluster_low;
     uint32_t dir_file_size;           // Size of the DIR (Always 0)
 };
 struct dir_etry dir[16];       //Creation of the DIR 
-
+/*
+This the structure of a directory. We store all the information of a *dir* in a variable of this structure to access 
+the its properties such as FileSize, DIrName, FirstCluster properties, etc. as shown in the image below,
+*/
 varX str_n_length(const char *str, varX n)
 {
     for (varX size = 0; size < n; size++)
@@ -175,6 +177,9 @@ void INIT_ARGUMENTS()    // patigyu
         argument_cnt++;
     }
 }
+/*
+This is the `openImage` function that allows us to open the `.img` file containing the FAT configured drive.
+*/
 void arg_cmp_func(char *s)
 {
     if(strcmp(s,"info") == 0)
@@ -360,6 +365,10 @@ void format_dir(char *directory_name)  // converts to capital letters  microsoft
     }
     strncpy(final_modified_dir, modified_name, 12);    // ALL capital letters with 8 filename and 3 for extension length
 }
+/*
+This function formats the proper naming convention for the file directories in order to store it. 
+This should be in capital letters (max 8 characters) and followed by 3 characters of extension. 
+*/
 
 i_32 obtain_clus(char *dir_name)
 {
@@ -380,6 +389,10 @@ i_32 obtain_clus(char *dir_name)
     }
     return -1;  // if no such file is present
 }
+/*
+we first get the formatted name of the directory. Then  traverse, and get the formatted name as well. 
+If it formatted name matches with the formatted name of the directory , then we have got a match.
+*/
 
 void statistics(char *directory_name)
 {
@@ -401,6 +414,10 @@ void statistics(char *directory_name)
             break;
     }
 }
+/*
+the cluster is obtained from the given directory name and then obtain information from the given statistics like 
+cluster low, attribute, cluster high and everything that is stored as the property of the directory.
+*/
 
 i_32 find_clus_size(i_32 cluss)           // returns size of provided cluss
 {
@@ -415,6 +432,10 @@ i_32 find_clus_size(i_32 cluss)           // returns size of provided cluss
     }
     return -1;
 }
+/*
+if the cluster number of directory under consideration matches with the cluster number passed as argument,
+then we have gotten a match. We return the size of the cluster
+*/
 
 void cd(i_32 cluss)                                   // "cd" implemented
 {
@@ -446,12 +467,12 @@ void cd(i_32 cluss)                                   // "cd" implemented
         fread(&dir[0], 32, 16, fileptrr);           // read that content
     }
     else
-    {
-            return;
-    }
-    
-   
+        return;
 }
+/*
+there are two pointers like ".." and ".". " .." is associated with parent directory
+So the function after validating the input, gets the offset of parent directory. Changes the pointer and then read
+*/
 
 void read_file(char *directory_name, i64 pos, i64 number_of_bytes)  // reads file starting from the given pos upto the number of bytes mentioned
 {
@@ -460,6 +481,10 @@ void read_file(char *directory_name, i64 pos, i64 number_of_bytes)  // reads fil
     fread(DATA, number_of_bytes, 1, fileptrr);          // reads the entire content till size numofbytes
     printf("%s\n", DATA);
 }
+/*
+We call the getCluster function. So we get the offset. We move the pointer to that file 
+help of that fseek function. Now read the data of the file and store and print this array.
+ */
 
 void get_dir_info()    // prints information
 {
@@ -473,6 +498,9 @@ void get_dir_info()    // prints information
             break;
     }
 }
+/*
+This function is used to implement the `info` command on an already opened `.img` file.
+*/
 
 void print(char *dir)
 {
@@ -524,6 +552,10 @@ void ls()  // works as "ls" command
         }
     }
 }
+/*
+we need offset and then we are pointing the file pointer to and along with this, directory attributes are also required 
+for the validation purpose.
+*/
 
 void decimal_to_hexadecimal(i64 dec)
 {
@@ -546,4 +578,3 @@ void decimal_to_hexadecimal(i64 dec)
     for(i=itr-1; i>=0; i--) 
         printf("%c",output[i]); 
 }
-
