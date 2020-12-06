@@ -228,7 +228,7 @@ void INIT_RUNFAT()
         if (BUFER[1]==NULL)  
         {
             // file name not given
-            printf(" The arguments are not provided. Error in opening file\n");
+            printf("args insufficient!!!\n");
             
         }
         else if (BUFER[1]!=NULL && fileptrr==NULL) 
