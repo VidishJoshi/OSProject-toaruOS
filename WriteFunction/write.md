@@ -1,0 +1,1 @@
+This flow diagram illustrates the flow needed in order to incorporate the write function in fat32.c
