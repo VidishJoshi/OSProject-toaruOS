@@ -1,10 +1,63 @@
-/////   all includes   
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+size_t strnlen(const char *str, size_t len)
+{
+    for (size_t size = 0; size < len; size++)
+    {
+        if (str[size] == '\0')
+            return size;
+    }
+    return len;
+}
+
+
+char *strdup(const char *s) {
+    size_t size = strlen(s) + 1;
+    char *p = malloc(size);
+    if (p != NULL) {
+        memcpy(p, s, size);
+    }
+    return p;
+}
+
+char *strndup(const char *s, size_t n) {
+    char *p;
+    size_t n1;
+
+    for (n1 = 0; n1 < n && s[n1] != '\0'; n1++)
+        continue;
+    p = malloc(n + 1);
+    if (p != NULL) {
+        memcpy(p, s, n1);
+        p[n1] = '\0';
+    }
+    return p;
+}
+
+char *strsep (char **stringp, const char *delim)
+{
+  char *begin, *end;
+  begin = *stringp;
+  if (begin == NULL)
+    return NULL;
+  /* Find the end of the token.  */
+  end = begin + strcspn (begin, delim);
+  if (*end)
+    {
+      /* Terminate the token and set *STRINGP past NUL character.  */
+      *end++ = '\0';
+      *stringp = end;
+    }
+  else
+    /* No more delimiters; this is the last token.  */
+    *stringp = NULL;
+  return begin;
+}
 
 #define WHITESPACE " \t\n" // We want to split our command line up into tokens \
                            // so we need to define what delimits our tokens.   \
@@ -392,6 +445,19 @@ void get_dir_info()    // prints information
     }
 }
 
+void print(char *dir)
+{
+	int i=0;
+	for(i=0; i<11; i++)
+	{
+		if((dir[i]>='A' && dir[i]<='Z') || (dir[i]>='0' && dir[i]<='9') || dir[i]==' ')
+		{
+			printf("%c", dir[i]);
+		}	
+	}
+	printf("\n");
+}
+
 void ls()  // works as "ls" command
 {
     if (fp == NULL) // image file not opened
@@ -413,7 +479,7 @@ void ls()  // works as "ls" command
             char *directory = malloc(11);
             memset(directory, '\0', 11);   // initialize directory to '\0'
             memcpy(directory, dir[i].DIR_Name, 11); // copies directory name
-            printf("%s\n", directory); // print
+            print(directory); // print
         }
     }
 }
